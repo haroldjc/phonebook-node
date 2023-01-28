@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build:ui": "rm -rf build && cd ../phonebook && npm run build && cp -r build ../phonebook-backend",
+    "deploy:full": "npm run build:ui && git add -A & git commit -m uibuild && git push origin main"
   },
   "author": "Harold",
   "license": "ISC",
