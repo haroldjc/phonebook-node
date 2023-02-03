@@ -1,8 +1,10 @@
+require('dotenv').config()
 const { application } = require('express')
 const express = require('express')
 const nodemon = require('nodemon')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 const app = express()
 
 app.use(cors())
@@ -23,45 +25,21 @@ app.use(morgan((tokens, req, res) => {
   ].join(' ')
 }))
 
-let persons = [
-  { 
-    "id": 1,
-    "name": "Arto Hellas", 
-    "number": "040-123456"
-  },
-  { 
-    "id": 2,
-    "name": "Ada Lovelace", 
-    "number": "39-44-5323523"
-  },
-  { 
-    "id": 3,
-    "name": "Dan Abramov", 
-    "number": "12-43-234345"
-  },
-  { 
-    "id": 4,
-    "name": "Mary Poppendieck", 
-    "number": "39-23-6423122"
-  }
-]
-
 const generateID = () => {
   return Math.floor(Math.random() * 1000)
 }
 
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then(persons => {
+    response.json(persons)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-  
-  if (person)
-    response.json(person)
-  else
-    response.status(400).end()
+  Person.findById(request.params.id)
+    .then(person => {
+      response.json(person)
+    })
 })
 
 app.post('/api/persons', (request, response) => {
@@ -73,20 +51,26 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  if (persons.find(person => person.name === body.name)) {
-    return response.status(400).json({
-      error: `${body.name} is already in the phonebook`
+  // Check if name is already in DB
+  Person.findOne({
+    name: body.name
+  }).then(returnedPerson => {
+    if (returnedPerson) {
+      return response.status(400).json({
+        error: `${returnedPerson.name} is already in the phonebook`
+      })
+    }
+
+    const person = new Person({
+      name: body.name,
+      number: body.number
     })
-  }
-
-  const newPerson = {
-    id: generateID(),
-    name: body.name,
-    number: body.number
-  }
-
-  persons = persons.concat(newPerson)
-  response.json(newPerson)
+  
+    person.save()
+      .then(savedPerson => {
+        response.json(savedPerson)
+      })
+  })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
