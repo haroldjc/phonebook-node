@@ -30,7 +30,7 @@ const generateID = () => {
 }
 
 // Get all the persons
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   Person.find({})
     .then(persons => {
       response.json(persons)
@@ -39,7 +39,7 @@ app.get('/api/persons', (request, response) => {
 })
 
 // Get specific person
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then(person => {
       response.json(person)
@@ -48,7 +48,7 @@ app.get('/api/persons/:id', (request, response) => {
 })
 
 // Add new person
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name || !body.number) {
@@ -85,6 +85,22 @@ app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
       response.status(204).end()
+    })
+    .catch(error => next(error))
+})
+
+// Update a person
+app.put('/api/persons/:id', (request, response, next) => {
+  const body = request.body
+
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+  
+  Person.findByIdAndUpdate(request.params.id, person, {new: true})
+    .then(updatedPerson => {
+      response.json(updatedPerson)
     })
     .catch(error => next(error))
 })
