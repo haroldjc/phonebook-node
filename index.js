@@ -31,9 +31,11 @@ const generateID = () => {
 
 // Get all the persons
 app.get('/api/persons', (request, response) => {
-  Person.find({}).then(persons => {
-    response.json(persons)
-  })
+  Person.find({})
+    .then(persons => {
+      response.json(persons)
+    })
+    .catch(error => next(error))
 })
 
 // Get specific person
@@ -42,6 +44,7 @@ app.get('/api/persons/:id', (request, response) => {
     .then(person => {
       response.json(person)
     })
+    .catch(error => next(error))
 })
 
 // Add new person
@@ -73,6 +76,7 @@ app.post('/api/persons', (request, response) => {
       .then(savedPerson => {
         response.json(savedPerson)
       })
+      .catch(error => next(error))
   })
 })
 
