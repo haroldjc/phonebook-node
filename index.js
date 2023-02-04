@@ -29,12 +29,14 @@ const generateID = () => {
   return Math.floor(Math.random() * 1000)
 }
 
+// Get all the persons
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
     response.json(persons)
   })
 })
 
+// Get specific person
 app.get('/api/persons/:id', (request, response) => {
   Person.findById(request.params.id)
     .then(person => {
@@ -42,6 +44,7 @@ app.get('/api/persons/:id', (request, response) => {
     })
 })
 
+// Add new person
 app.post('/api/persons', (request, response) => {
   const body = request.body
 
@@ -73,22 +76,20 @@ app.post('/api/persons', (request, response) => {
   })
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-
-  if (person) {
-    persons = persons.filter(person => person.id !== id)
-    response.status(204).end()
-  } else {
-    response.status(400).end()
-  }
+// Delete a person
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndRemove(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
   response.send(`<p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>`)
 })
 
+// Handle and unknown endpoint
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
@@ -96,6 +97,19 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint)
 
 app.use(morgan)
+
+// Error handling middleware
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = 3001
 app.listen(PORT, () => {
